@@ -33,13 +33,9 @@ export default async function Page({
     params,
     locale,
 }: PageProps<any> & RootsPageProps) {
-    const { segments } = await params;
-    // [[...segments]] = optional catch-all: segments is undefined for "/" or array for other paths
-    const parsedSegments = segments ?? [];
-    
     return (
         <Suspense fallback={<PageSkeleton />}>
-            <PageContent segments={parsedSegments} locale={locale} />
+            <PageContent params={params} locale={locale} />
         </Suspense>
     );
 }

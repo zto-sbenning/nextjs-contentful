@@ -26,8 +26,8 @@ function buildTopicPath(urlPattern: string, slug: string): string {
 }
 
 type LivePreviewContentProps = {
-    entrySysId: string;
-    token: string | string[] | undefined;
+    params: Promise<{ entrySysId: string }>;
+    searchParams: Promise<{ token?: string | string[] }>;
     locale: RouteLocale;
 };
 
@@ -36,7 +36,10 @@ type LivePreviewContentProps = {
  * 
  * Handles token validation, topic fetching, and redirect to the real preview URL.
  */
-async function LivePreviewContent({ entrySysId, token, locale }: LivePreviewContentProps): Promise<never> {
+async function LivePreviewContent({ params, searchParams, locale }: LivePreviewContentProps): Promise<never> {
+    const { entrySysId } = await params;
+    const { token } = await searchParams;
+    
     // Validate the preview token
     const tokenValue = Array.isArray(token) ? token[0] : token;
     if (!isValidLivePreviewToken(tokenValue ?? null)) {
@@ -113,14 +116,11 @@ export default async function LivePreviewEntryPage({
     searchParams,
     locale,
 }: PageProps<"/live-preview/[entrySysId]"> & RootsPageProps) {
-    const { entrySysId } = await params;
-    const { token } = await searchParams;
-    
     return (
         <Suspense fallback={<LivePreviewSkeleton />}>
             <LivePreviewContent 
-                entrySysId={entrySysId} 
-                token={token} 
+                params={params} 
+                searchParams={searchParams} 
                 locale={locale} 
             />
         </Suspense>

@@ -6,7 +6,7 @@ import { Route } from "next";
 import { RouteLocale } from "next-roots";
 
 type PageContentProps = {
-    segments: string[];
+    params: Promise<{ segments?: string[] }>;
     locale: RouteLocale;
 };
 
@@ -17,7 +17,10 @@ type PageContentProps = {
  * - In generateStaticParams: Fully static (ISR via cacheLife)
  * - Not in generateStaticParams: Streamed dynamically via Suspense
  */
-export async function PageContent({ segments, locale }: PageContentProps) {
+export async function PageContent({ params, locale }: PageContentProps) {
+    const { segments: rawSegments } = await params;
+    // [[...segments]] = optional catch-all: segments is undefined for "/" or array for other paths
+    const segments = rawSegments ?? [];
     const contentfulLocale = toContentfulLocale(locale);
     
     // Find the topic that matches these segments
