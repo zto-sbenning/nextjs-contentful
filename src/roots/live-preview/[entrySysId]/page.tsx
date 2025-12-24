@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Route } from "next";
 import { getTopicById } from "@/lib/dal/contentfulPreview";
 import isValidLivePreviewToken from "@/lib/contentful/isValidLivePreviewToken";
-import { getFieldForLocale, isResolvedEntry, toContentfulLocale, type SupportedLocale } from "@/lib/types";
+import { getFieldForLocale, isResolvedEntry, toContentfulLocale, DEFAULT_LOCALE, type SupportedLocale } from "@/lib/types";
 import { TypeConfigPageTemplateSkeleton } from "@/lib/contentful/content-types";
 import { PageProps as RootsPageProps } from "next-roots";
 import { RouteLocale } from "next-roots";
@@ -27,8 +27,7 @@ function buildTopicPath(urlPattern: string, slug: string): string {
 
 type LivePreviewContentProps = {
     params: Promise<{ entrySysId: string }>;
-    searchParams: Promise<{ token?: string | string[] }>;
-    locale: RouteLocale;
+    searchParams: Promise<{ token?: string | string[]; locale?: string | string[] }>;
 };
 
 /**
@@ -36,9 +35,12 @@ type LivePreviewContentProps = {
  * 
  * Handles token validation, topic fetching, and redirect to the real preview URL.
  */
-async function LivePreviewContent({ params, searchParams, locale }: LivePreviewContentProps): Promise<never> {
+async function LivePreviewContent({ params, searchParams }: LivePreviewContentProps): Promise<never> {
     const { entrySysId } = await params;
-    const { token } = await searchParams;
+    const { token, locale: localeParam } = await searchParams;
+    
+    // Get locale from searchParams (target locale from Contentful)
+    const locale = (Array.isArray(localeParam) ? localeParam[0] : localeParam) as RouteLocale | undefined;
     
     // Validate the preview token
     const tokenValue = Array.isArray(token) ? token[0] : token;
@@ -56,7 +58,7 @@ async function LivePreviewContent({ params, searchParams, locale }: LivePreviewC
     }
 
     // Get the slug and pageTemplate to build the real URL
-    const contentfulLocale = toContentfulLocale(locale);
+    const contentfulLocale = locale ? toContentfulLocale(locale) : DEFAULT_LOCALE;
     const slug = getFieldForLocale(topic, "slug", contentfulLocale);
     const pageTemplate = getFieldForLocale(topic, "pageTemplate", contentfulLocale);
 
@@ -114,14 +116,12 @@ function LivePreviewSkeleton() {
 export default async function LivePreviewEntryPage({
     params,
     searchParams,
-    locale,
 }: PageProps<"/live-preview/[entrySysId]"> & RootsPageProps) {
     return (
         <Suspense fallback={<LivePreviewSkeleton />}>
             <LivePreviewContent 
                 params={params} 
                 searchParams={searchParams} 
-                locale={locale} 
             />
         </Suspense>
     );
