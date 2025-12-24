@@ -1,3 +1,5 @@
 onlyBuiltDependencies:
+  - esbuild
+  - next-roots
   - sharp
   - unrs-resolver

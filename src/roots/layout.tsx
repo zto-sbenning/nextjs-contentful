@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { fontVariables, defaultFontClassName } from "../design-system/fonts";
-import "./globals.css";
+import "@/app/globals.css";
 import { ReportWebVitals } from "@/components/web/ReportWebVitals";
 import { UtmCapture } from "@/components/web/UtmCapture";
 import { BoundaryProvider } from "@/components/internal/BoundaryProvider";
