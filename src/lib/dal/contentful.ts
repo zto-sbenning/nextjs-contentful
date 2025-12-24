@@ -50,7 +50,7 @@ export async function getTopicBySlug(
         content_type: contentType,
         [`fields.slug.${locale}`]: slug,
         [`fields.active.${locale}`]: true,
-        include: 2, // Include the pageTemplate reference
+        include: 10, // Include the pageTemplate reference
         limit: 1
     });
 
@@ -75,7 +75,7 @@ export async function getTopicById(entryId: string) {
 
     try {
         const entry = await client.getEntry<TopicSkeleton, SupportedLocale>(entryId, {
-            include: 2,
+            include: 10,
         });
         return entry;
     } catch (error) {
@@ -109,7 +109,7 @@ export async function getTopicsByType(
     const entries = await client.getEntries<TopicSkeleton, SupportedLocale>({
         content_type: contentType,
         [`fields.active.${locale}`]: true,
-        include: 2,
+        include: 10,
         limit
     });
 

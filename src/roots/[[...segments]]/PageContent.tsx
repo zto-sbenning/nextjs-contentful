@@ -1,9 +1,12 @@
 import { redirect, notFound } from "next/navigation";
-import { Suspense } from "react";
 import { findTopicBySegments } from "@/lib/contentful/findTopicBySegments";
 import { getFieldForLocale, toContentfulLocale } from "@/lib/types";
+import { isResolvedEntry } from "@/lib/contentful/field";
 import { Route } from "next";
 import { RouteLocale } from "next-roots";
+import { DebugOverlay, type PageDebugInfo } from "@/components/internal/debug";
+import AssemblySection from "@/components/contentful/AssemblySection";
+import type { TypeAssemblySectionSkeleton } from "@/lib/contentful/content-types";
 
 type PageContentProps = {
     params: Promise<{ segments?: string[] }>;
@@ -40,19 +43,58 @@ export async function PageContent({ params, locale }: PageContentProps) {
     }
     
     // Topic found! You can now render it based on its type
-    const { topic, contentType, urlPattern, isPreviewMode, isPreviewValid } = result;
+    const { topic, contentType, urlPattern, pageTemplate, isPreviewMode, isPreviewValid } = result;
     const displayName = getFieldForLocale(topic, "displayName", contentfulLocale);
-    const slug = getFieldForLocale(topic, "slug", contentfulLocale);
+    const templateName = pageTemplate ? getFieldForLocale(pageTemplate, "displayName", contentfulLocale) : null;
+    
+    // Extract sections from the page template
+    const sections = pageTemplate ? getFieldForLocale(pageTemplate, "sections", contentfulLocale) : null;
+    
+    // Build debug info for the overlay (props-based, no dynamic impact)
+    const debugInfo: PageDebugInfo = {
+        contentType,
+        entryId: topic.sys.id,
+        displayName: displayName ?? '—',
+        template: templateName ?? urlPattern,
+        locale,
+        isPreview: isPreviewMode && isPreviewValid,
+    };
     
     return (
         <div>
-            <h1>Topic Found!</h1>
-            <p><strong>Type:</strong> {contentType}</p>
-            <p><strong>Display Name:</strong> {displayName}</p>
-            <p><strong>Slug:</strong> {slug}</p>
-            <p><strong>URL Pattern:</strong> {urlPattern}</p>
-            {isPreviewMode && isPreviewValid && (
-                <p className="text-orange-500"><strong>🔍 Preview Mode Active</strong></p>
+            <DebugOverlay info={debugInfo} />
+            
+            {/* Render sections from the template */}
+            {sections && sections.length > 0 ? (
+                <main>
+                    {sections.map((section) => {
+                        // Skip unresolved links
+                        if (!isResolvedEntry<TypeAssemblySectionSkeleton, string>(section)) {
+                            return null;
+                        }
+                        
+                        return (
+                            <AssemblySection
+                                key={section.sys.id}
+                                entry={section}
+                                locale={contentfulLocale}
+                            />
+                        );
+                    })}
+                </main>
+            ) : (
+                // Fallback: show debug info when no sections
+                <div className="p-8">
+                    <h1 className="text-2xl font-bold mb-4">Topic: {displayName}</h1>
+                    <p><strong>Type:</strong> {contentType}</p>
+                    <p><strong>Template:</strong> {templateName ?? urlPattern}</p>
+                    {isPreviewMode && isPreviewValid && (
+                        <p className="text-orange-500 mt-2"><strong>🔍 Preview Mode Active</strong></p>
+                    )}
+                    <p className="text-neutral-500 mt-4 text-sm">
+                        No sections configured for this template.
+                    </p>
+                </div>
             )}
         </div>
     );

@@ -1,13 +1,14 @@
-import type { Entry, EntrySkeletonType, LocaleCode, UnresolvedLink } from "contentful";
+import type { ChainModifiers, Entry, EntrySkeletonType, LocaleCode, UnresolvedLink } from "contentful";
 import { DEFAULT_LOCALE } from "../types";
 
-type WithAllLocalesEntry<
-    TEntry extends Entry<EntrySkeletonType, "WITH_ALL_LOCALES", Locales>,
-    Locales extends LocaleCode
-> = TEntry;
+/**
+ * Type helper pour les entries avec locales
+ * Accepte "WITH_ALL_LOCALES" seul ou combiné avec d'autres modifiers
+ */
+type WithAllLocalesModifiers = "WITH_ALL_LOCALES" | `${"WITHOUT_UNRESOLVABLE_LINKS" | "WITHOUT_LINK_RESOLUTION"} | WITH_ALL_LOCALES` | ChainModifiers;
 
 type FieldValueForLocale<
-    TEntry extends Entry<EntrySkeletonType, "WITH_ALL_LOCALES", LocaleCode>,
+    TEntry extends Entry<EntrySkeletonType, ChainModifiers, LocaleCode>,
     TKey extends keyof TEntry["fields"]
 > = NonNullable<TEntry["fields"][TKey]> extends { [locale: string]: infer V }
     ? V | undefined
@@ -19,8 +20,7 @@ export interface GetFieldForLocaleOptions {
 }
 
 export function getFieldForLocale<
-    Locales extends LocaleCode,
-    TEntry extends WithAllLocalesEntry<Entry<EntrySkeletonType, "WITH_ALL_LOCALES", Locales>, Locales>,
+    TEntry extends Entry<EntrySkeletonType, ChainModifiers, LocaleCode>,
     TKey extends keyof TEntry["fields"]
 >(
     entry: TEntry,

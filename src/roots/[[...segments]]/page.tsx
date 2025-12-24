@@ -3,6 +3,7 @@ import { generateTopicPaths } from "@/lib/contentful/generateTopicPaths";
 import { toContentfulLocale } from "@/lib/types";
 import { GeneratePageStaticParamsProps, PageProps as RootsPageProps } from "next-roots";
 import { PageContent, PageSkeleton } from "./PageContent";
+import Boundary from "@/components/internal/Boundary";
 
 /**
  * Generate static params for all topics
@@ -34,8 +35,12 @@ export default async function Page({
     locale,
 }: PageProps<any> & RootsPageProps) {
     return (
-        <Suspense fallback={<PageSkeleton />}>
-            <PageContent params={params} locale={locale} />
-        </Suspense>
+        <div className="flex flex-col flex-1 p-14">
+        <Boundary rendering="hybrid" hydration="server">
+            <Suspense fallback={<PageSkeleton />}>
+                <PageContent params={params} locale={locale} />
+            </Suspense>
+        </Boundary>
+        </div>
     );
 }

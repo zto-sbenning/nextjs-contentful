@@ -37,6 +37,12 @@ const nextConfig: NextConfig = {
                 port: '',
                 pathname: '/api/portraits/**',
             },
+            {
+                protocol: 'https',
+                hostname: 'images.ctfassets.net',
+                port: '',
+                pathname: `/${process.env.CONTENTFUL_SPACE_ID}/**`,
+            }
         ],
         formats: ['image/avif', 'image/webp'],
         minimumCacheTTL: 86400,
